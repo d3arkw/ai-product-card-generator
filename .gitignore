@@ -218,3 +218,34 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---- Local-only project materials (see AGENTS.md section 2) ----
+# Internal specs, plans and assignments must never enter Git.
+AGENTS.md
+requirements.md
+DEVELOPMENT_PLAN.md
+color-design-system.md
+*.pdf
+.agent-local/
+
+# Local secrets and configs
+.env.*
+*.pem
+*.key
+
+# IDE and OS artefacts
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local run artefacts
+*.log
+logs/
+
+# Playwright MCP browser state
+.playwright-mcp/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
