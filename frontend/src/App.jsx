@@ -25,9 +25,9 @@ const FALLBACK_MODELS = {
     expensive: "gpt-5.4-pro-2026-03-17",
   },
   gemini: {
-    cheap: "gemini-2.5-flash-lite",
-    medium: "gemini-3.8-flash",
-    expensive: "gemini-2.5-pro",
+    cheap: "gemini-3.5-flash-lite",
+    medium: "gemini-3.6-flash",
+    expensive: "gemini-3.8-flash",
   },
   routerai: {
     cheap: "inclusionai/ling-3.0-flash",

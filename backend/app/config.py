@@ -14,9 +14,9 @@ class Settings(BaseSettings):
     openai_model_medium: str = "gpt-5.4-2026-03-17"
     openai_model_expensive: str = "gpt-5.4-pro-2026-03-17"
     gemini_model: str | None = None
-    gemini_model_cheap: str = "gemini-2.5-flash-lite"
-    gemini_model_medium: str = "gemini-3.8-flash"
-    gemini_model_expensive: str = "gemini-2.5-pro"
+    gemini_model_cheap: str = "gemini-3.5-flash-lite"
+    gemini_model_medium: str = "gemini-3.6-flash"
+    gemini_model_expensive: str = "gemini-3.8-flash"
     routerai_model: str | None = None
     routerai_model_cheap: str = "inclusionai/ling-3.0-flash"
     routerai_model_medium: str = "qwen/qwen3.7-flash"
