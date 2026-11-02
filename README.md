@@ -1,9 +1,22 @@
 # AI-ассистент товарных карточек
 
+![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Tailwind 4](https://img.shields.io/badge/Tailwind-4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Tests](https://img.shields.io/badge/pytest-58_passed-4CAF50?style=flat-square&logo=pytest&logoColor=white)
+
 Веб-приложение для B2B-каталога КИП: принимает данные о товаре (форма или JSON),
 передаёт их выбранной LLM и возвращает структурированный черновик карточки —
 SEO-заголовок, SEO-описание, характеристики, поисковые запросы, commercial-блок
 и список недостающих данных. Результат копируется как JSON, Markdown или текст.
+
+## Демо
+
+| Десктоп                                       | Мобильный                                      |
+| --------------------------------------------- | ---------------------------------------------- |
+| ![Десктоп](docs/screenshots/demo-desktop.png) | ![Мобильный](docs/screenshots/demo-mobile.png) |
 
 ## Возможности
 
