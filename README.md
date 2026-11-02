@@ -12,12 +12,6 @@
 SEO-заголовок, SEO-описание, характеристики, поисковые запросы, commercial-блок
 и список недостающих данных. Результат копируется как JSON, Markdown или текст.
 
-## Демо
-
-| Десктоп                                       | Мобильный                                      |
-| --------------------------------------------- | ---------------------------------------------- |
-| ![Десктоп](docs/screenshots/demo-desktop.png) | ![Мобильный](docs/screenshots/demo-mobile.png) |
-
 ## Возможности
 
 - Три LLM-провайдера на выбор: OpenAI, Google Gemini, RouterAI.
@@ -164,8 +158,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/generate \
 
 ## Дизайн
 
-Интерфейс построен на фирменной палитре из `color-design-system.md`:
-лаймовый `#EFFBBB` + бордо `#722F37` («Premium / Modern Technology»).
+Интерфейс построен на фирменной палитре: лаймовый `#EFFBBB` + бордо `#722F37`
+(«Premium / Modern Technology»).
 Все 19 токенов (`brand-*`, `surface-*`, `text-*`, `interactive-*`, статусные)
 заданы в Tailwind v4 через `@theme` в `frontend/src/styles/index.css`
 и используются как утилиты (`bg-brand-primary`, `text-text-secondary`).
