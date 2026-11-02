@@ -95,10 +95,7 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 bg-[radial-gradient(600px_300px_at_15%_-50px,rgba(239,251,187,0.7),transparent),radial-gradient(700px_350px_at_90%_10%,rgba(234,217,217,0.55),transparent)]"
-      />
+      <div aria-hidden className="app-glow pointer-events-none fixed inset-0" />
       <header className="sticky top-0 z-10 border-b border-divider bg-surface/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-b from-brand-primary to-brand-dark text-sm font-bold text-text-inverse shadow-md">

@@ -6,7 +6,7 @@ export default function ErrorBanner({ error }) {
       {error.details?.length > 0 && (
         <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-text-secondary">
           {error.details.map((detail, index) => (
-            <li key={index}>{detail}</li>
+            <li key={index}>{String(detail)}</li>
           ))}
         </ul>
       )}

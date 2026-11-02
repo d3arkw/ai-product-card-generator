@@ -7,12 +7,23 @@ const OPTIONS = [
 export default function ProviderSelect({ value, onChange }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-text-primary">Провайдер</p>
-      <div className="grid grid-cols-3 gap-2">
+      <p
+        className="mb-2 text-sm font-medium text-text-primary"
+        id="provider-label"
+      >
+        Провайдер
+      </p>
+      <div
+        role="radiogroup"
+        aria-labelledby="provider-label"
+        className="grid grid-cols-3 gap-2"
+      >
         {OPTIONS.map((option) => (
           <button
             key={option.value}
             type="button"
+            role="radio"
+            aria-checked={value === option.value}
             onClick={() => onChange(option.value)}
             className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
               value === option.value

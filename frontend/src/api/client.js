@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 const TIMEOUT_MS = 180000;
 
 export async function generateCard({ provider, apiKey, product }) {
@@ -22,5 +22,11 @@ export async function generateCard({ provider, apiKey, product }) {
   } finally {
     clearTimeout(timer);
   }
-  return response.json();
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(`Сервер вернул некорректный ответ (${response.status}).`);
+  }
+  return payload;
 }

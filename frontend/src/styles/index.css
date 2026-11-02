@@ -22,6 +22,7 @@
   --color-interactive-active: #4f2028;
   --color-interactive-soft: #ead9d9;
   --color-interactive-disabled: #dcd5d1;
+  --color-interactive-default: #722f37;
 
   --color-success: #347a55;
   --color-warning: #b47a28;
@@ -35,4 +36,18 @@ body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.app-glow {
+  background-image:
+    radial-gradient(
+      600px 300px at 15% -50px,
+      color-mix(in srgb, var(--color-brand-light) 70%, transparent),
+      transparent
+    ),
+    radial-gradient(
+      700px 350px at 90% 10%,
+      color-mix(in srgb, var(--color-brand-soft) 55%, transparent),
+      transparent
+    );
 }

@@ -1,10 +1,14 @@
 export default function RawJsonInput({ value, onChange }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-text-primary">
+      <label
+        htmlFor="product-json"
+        className="mb-2 block text-sm font-medium text-text-primary"
+      >
         Товар в формате JSON
-      </p>
+      </label>
       <textarea
+        id="product-json"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={12}

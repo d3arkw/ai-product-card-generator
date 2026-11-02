@@ -28,10 +28,14 @@ export default function ProductForm({
   return (
     <div className="space-y-4">
       <div>
-        <p className="mb-2 text-sm font-medium text-text-primary">
+        <label
+          htmlFor="product-name"
+          className="mb-2 block text-sm font-medium text-text-primary"
+        >
           Название товара
-        </p>
+        </label>
         <input
+          id="product-name"
           value={name}
           onChange={(event) => onChange({ name: event.target.value })}
           placeholder="Манометр показывающий DM 02"
@@ -39,10 +43,14 @@ export default function ProductForm({
         />
       </div>
       <div>
-        <p className="mb-2 text-sm font-medium text-text-primary">
+        <label
+          htmlFor="product-manufacturer"
+          className="mb-2 block text-sm font-medium text-text-primary"
+        >
           Производитель
-        </p>
+        </label>
         <input
+          id="product-manufacturer"
           value={manufacturer}
           onChange={(event) => onChange({ manufacturer: event.target.value })}
           placeholder="Манотомь"
@@ -62,6 +70,7 @@ export default function ProductForm({
                   updateSpec(index, "key", event.target.value)
                 }
                 placeholder="Параметр"
+                aria-label={`Параметр ${index + 1}`}
                 className={`${inputClass} min-w-0 flex-1`}
               />
               <input
@@ -70,6 +79,7 @@ export default function ProductForm({
                   updateSpec(index, "value", event.target.value)
                 }
                 placeholder="Значение"
+                aria-label={`Значение ${index + 1}`}
                 className={`${inputClass} min-w-0 flex-1`}
               />
               <button
@@ -92,10 +102,14 @@ export default function ProductForm({
         </button>
       </div>
       <div>
-        <p className="mb-2 text-sm font-medium text-text-primary">
+        <label
+          htmlFor="product-description"
+          className="mb-2 block text-sm font-medium text-text-primary"
+        >
           Описание или фрагмент паспорта
-        </p>
+        </label>
         <textarea
+          id="product-description"
           value={description}
           onChange={(event) => onChange({ description: event.target.value })}
           placeholder="Прибор предназначен для измерения…"

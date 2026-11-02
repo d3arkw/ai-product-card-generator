@@ -10,9 +10,15 @@ export default function KeyInput({ provider, value, onChange }) {
   const [visible, setVisible] = useState(false);
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-text-primary">API-ключ</p>
+      <label
+        htmlFor="api-key"
+        className="mb-2 block text-sm font-medium text-text-primary"
+      >
+        API-ключ
+      </label>
       <div className="flex gap-2">
         <input
+          id="api-key"
           type={visible ? "text" : "password"}
           value={value}
           onChange={(event) => onChange(event.target.value)}
@@ -23,6 +29,8 @@ export default function KeyInput({ provider, value, onChange }) {
         <button
           type="button"
           onClick={() => setVisible((prev) => !prev)}
+          aria-label={visible ? "Скрыть API-ключ" : "Показать API-ключ"}
+          aria-pressed={visible}
           className="shrink-0 rounded-lg border border-border bg-surface px-3 text-sm text-text-secondary transition-colors hover:border-brand-secondary hover:text-text-primary"
         >
           {visible ? "Скрыть" : "Показать"}

@@ -2,13 +2,11 @@ import { useState } from "react";
 import { copyText, toMarkdown, toText } from "../utils/format.js";
 
 function CopyButton({ text, label }) {
-  const [done, setDone] = useState(false);
+  const [state, setState] = useState("idle");
   const onClick = async () => {
     const ok = await copyText(text);
-    if (ok) {
-      setDone(true);
-      setTimeout(() => setDone(false), 1500);
-    }
+    setState(ok ? "done" : "failed");
+    setTimeout(() => setState("idle"), 1500);
   };
   return (
     <button
@@ -16,7 +14,11 @@ function CopyButton({ text, label }) {
       onClick={onClick}
       className="rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-text-secondary transition-colors hover:border-brand-secondary hover:text-text-primary"
     >
-      {done ? "Скопировано" : (label ?? "Копировать")}
+      {state === "done"
+        ? "Скопировано"
+        : state === "failed"
+          ? "Не удалось"
+          : (label ?? "Копировать")}
     </button>
   );
 }
@@ -66,7 +68,7 @@ export default function ResultCard({ card }) {
 
       <Section
         title="SEO-описание"
-        hint={`${card.seo_description.length} символов`}
+        hint={`${card.seo_description.length} / 800–1200`}
         text={card.seo_description}
       >
         <p className="min-w-0 break-all text-sm leading-relaxed text-text-primary">
@@ -108,7 +110,7 @@ export default function ResultCard({ card }) {
           {card.search_queries.map((query, index) => (
             <span
               key={index}
-              className="rounded-full bg-interactive-soft px-3 py-1 text-xs text-text-primary"
+              className="break-all rounded-full bg-interactive-soft px-3 py-1 text-xs text-text-primary"
             >
               {query}
             </span>
@@ -127,7 +129,9 @@ export default function ResultCard({ card }) {
           <p className="text-sm font-medium text-warning">Не хватает данных</p>
           <ul className="mt-1 list-disc pl-5 text-xs text-text-secondary">
             {card.missing_data.map((item, index) => (
-              <li key={index}>{item}</li>
+              <li key={index} className="break-all">
+                {item}
+              </li>
             ))}
           </ul>
         </div>
