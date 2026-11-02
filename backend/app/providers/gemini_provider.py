@@ -45,13 +45,14 @@ class GeminiProvider(BaseLLMProvider):
         user_content: str,
         api_key: str,
         response_schema: dict,
+        model_tier: str = "cheap",
     ) -> str:
         client = genai.Client(api_key=api_key)
         try:
             try:
                 response = await asyncio.wait_for(
                     client.aio.models.generate_content(
-                        model=get_settings().gemini_model,
+                        model=self._resolve_model(model_tier),
                         contents=user_content,
                         config={
                             "system_instruction": system_prompt,

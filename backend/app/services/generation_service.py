@@ -107,6 +107,7 @@ async def generate_card(payload: GenerateRequest) -> ProductCard:
                 user_content=content,
                 api_key=api_key,
                 response_schema=schema,
+                model_tier=payload.model_tier,
             )
         except ServiceUnavailableError:
             if last or unavailable_retried:

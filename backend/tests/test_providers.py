@@ -315,3 +315,39 @@ def test_gemini_client_is_closed():
     client, _ = gemini_client(text="{}")
     call_gemini(client)
     client.close.assert_called_once()
+
+
+def test_openai_tier_selects_model():
+    from app.config import get_settings
+
+    client = openai_client(content='{"a": 1}')
+    with patch("app.providers.openai_provider.AsyncOpenAI", return_value=client):
+        run(
+            OpenAIProvider().generate_text(
+                system_prompt="sys",
+                user_content="user",
+                api_key="sk-x",
+                response_schema={"type": "object"},
+                model_tier="expensive",
+            )
+        )
+    kwargs = client.chat.completions.create.await_args.kwargs
+    assert kwargs["model"] == get_settings().openai_model_expensive
+
+
+def test_gemini_tier_selects_model():
+    from app.config import get_settings
+
+    client, models = gemini_client(text="{}")
+    with patch("app.providers.gemini_provider.genai.Client", return_value=client):
+        run(
+            GeminiProvider().generate_text(
+                system_prompt="sys",
+                user_content="user",
+                api_key="sk-x",
+                response_schema={"type": "object"},
+                model_tier="medium",
+            )
+        )
+    kwargs = models.generate_content.await_args.kwargs
+    assert kwargs["model"] == get_settings().gemini_model_medium

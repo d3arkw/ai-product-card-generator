@@ -9,6 +9,7 @@ class GenerateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     provider: Literal["openai", "gemini", "routerai"]
+    model_tier: Literal["cheap", "medium", "expensive"] = "cheap"
     api_key: SecretStr = Field(min_length=1, max_length=500)
     product: ProductInput
 

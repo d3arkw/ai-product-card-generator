@@ -60,6 +60,25 @@ def test_whitespace_api_key_rejected():
     assert response.json()["error"]["code"] == "validation_error"
 
 
+def test_unknown_model_tier_rejected():
+    payload = make_payload()
+    payload["model_tier"] = "ultra"
+    response = client.post("/api/v1/generate", json=payload)
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+
+
+def test_models_endpoint_lists_tiers():
+    response = client.get("/api/v1/models")
+    assert response.status_code == 200
+    models = response.json()["models"]
+    assert set(models) == {"openai", "gemini", "routerai"}
+    for provider_models in models.values():
+        assert set(provider_models) == {"cheap", "medium", "expensive"}
+        assert all(isinstance(model, str) and model for model in provider_models.values())
+    assert models["routerai"]["cheap"] == "inclusionai/ling-3.0-flash"
+
+
 def test_unknown_provider_rejected():
     payload = make_payload()
     payload["provider"] = "anthropic"

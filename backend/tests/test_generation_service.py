@@ -139,6 +139,15 @@ def test_unavailable_twice_raises():
         run(generate_card(make_payload()))
 
 
+def test_model_tier_reaches_provider():
+    provider = mock_provider(make_card_json())
+    payload = make_payload()
+    payload.model_tier = "expensive"
+    with patch.object(generation_service, "get_provider", return_value=provider):
+        run(generate_card(payload))
+    assert provider.generate_text.await_args.kwargs["model_tier"] == "expensive"
+
+
 def test_prompt_has_core_rules():
     prompt = system_prompt()
     assert "missing_data" in prompt

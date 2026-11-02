@@ -5,7 +5,7 @@
 ![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Tailwind 4](https://img.shields.io/badge/Tailwind-4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Tests](https://img.shields.io/badge/pytest-58_passed-4CAF50?style=flat-square&logo=pytest&logoColor=white)
+![Tests](https://img.shields.io/badge/pytest-65_passed-4CAF50?style=flat-square&logo=pytest&logoColor=white)
 
 Веб-приложение для B2B-каталога КИП: принимает данные о товаре (форма или JSON),
 передаёт их выбранной LLM и возвращает структурированный черновик карточки —
@@ -124,9 +124,18 @@ cd frontend && npm run dev -- --port 5173 --host 127.0.0.1    # http://127.0.0.1
 ```
 
 Файл `.env` не нужен: backend работает без него, секреты только пользовательские
-и только в запросах. Опционально переопределяются переменные окружения:
-`OPENAI_MODEL`, `GEMINI_MODEL`, `ROUTERAI_MODEL`, `ROUTERAI_BASE_URL`,
-`REQUEST_TIMEOUT_SECONDS`, `MAX_REPAIR_RETRIES`.
+и только в запросах. Все значения ниже уже заданы по умолчанию и меняются
+без правок кода (см. `backend/.env.example`):
+
+| Провайдер | Эконом                  | Стандарт           | Максимум             |
+| --------- | ----------------------- | ------------------ | -------------------- |
+| OpenAI    | `gpt-5.4-mini`          | `gpt-5.4`          | `gpt-5.4-pro`        |
+| Gemini    | `gemini-2.5-flash-lite` | `gemini-3.8-flash` | `gemini-2.5-pro`     |
+| RouterAI  | `ling-3.0-flash`        | `qwen3.7-flash`    | `minimax-m3.1-flash` |
+
+Тир выбирается в интерфейсе (уровень + точный id модели видны сразу),
+в запрос уходит `model_tier`. Список моделей отдаёт `GET /api/v1/models`,
+поэтому frontend всегда показывает актуальные id.
 
 Проверка: `curl http://127.0.0.1:8000/health` → `{"status":"up"}`.
 
@@ -176,7 +185,7 @@ cd backend
 ../.venv/bin/python -m pytest tests
 ```
 
-58 тестов, все с моками внешних API — платные вызовы в наборе не выполняются.
+65 тестов, все с моками внешних API — платные вызовы в наборе не выполняются.
 Покрыты: входная валидация, схема результата, лимиты полей, ретраи при
 невалидном JSON, выдуманные значения, `missing_data`, ошибки OpenAI/Gemini/
 RouterAI, отсутствие ключа в ответах, изоляция ключей. Сборка frontend:
@@ -215,7 +224,7 @@ RouterAI, отсутствие ключа в ответах, изоляция к
   описания товара игнорируются; семантическая перепроверка значений.
 - **UX как продукт**: скелетон загрузки, пустое состояние, баннеры ошибок,
   счётчики лимитов, три провайдера в один клик, адаптив 390px/1280px.
-- **58 тестов + ruff**, все внешние API замоканы; отдельно проверен реальный
+- **65 тестов + ruff**, все внешние API замоканы; отдельно проверен реальный
   прогон через RouterAI и запуск с нуля (чистый venv, `npm ci`).
 - **Docker**: `Dockerfile` backend/frontend (nginx) и `docker-compose.yml`
   с healthcheck — демо поднимается одной командой.

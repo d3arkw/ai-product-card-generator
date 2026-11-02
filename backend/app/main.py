@@ -71,6 +71,16 @@ def create_app() -> FastAPI:
         card = await generate_card(payload)
         return CardResponse(data=card)
 
+    @app.get("/api/v1/models")
+    async def list_models() -> dict:
+        tiers = settings.model_tiers
+        return {
+            "models": {
+                provider: {tier: settings.model_for(provider, tier) for tier in tiers}
+                for provider in ("openai", "gemini", "routerai")
+            }
+        }
+
     return app
 
 

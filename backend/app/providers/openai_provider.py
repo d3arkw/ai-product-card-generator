@@ -24,12 +24,8 @@ from app.providers.base import BaseLLMProvider
 class OpenAICompatibleProvider(BaseLLMProvider):
     name = "openai"
     label = "OpenAI"
-    model_setting = "openai_model"
     base_url_setting: str | None = None
     timeout_seconds: int | None = None
-
-    def _model(self) -> str:
-        return getattr(get_settings(), self.model_setting)
 
     def _timeout(self) -> int:
         return self.timeout_seconds or get_settings().request_timeout_seconds
@@ -46,12 +42,13 @@ class OpenAICompatibleProvider(BaseLLMProvider):
         user_content: str,
         api_key: str,
         response_schema: dict,
+        model_tier: str = "cheap",
     ) -> str:
         client = self._client(api_key)
         try:
             response = await asyncio.wait_for(
                 client.chat.completions.create(
-                    model=self._model(),
+                    model=self._resolve_model(model_tier),
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_content},

@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
-import { generateCard } from "./api/client.js";
+import { useEffect, useMemo, useState } from "react";
+import { fetchModels, generateCard } from "./api/client.js";
 import ProviderSelect from "./components/ProviderSelect.jsx";
+import TierSelect from "./components/TierSelect.jsx";
 import KeyInput from "./components/KeyInput.jsx";
 import ProductForm from "./components/ProductForm.jsx";
 import RawJsonInput from "./components/RawJsonInput.jsx";
@@ -16,6 +17,24 @@ const EXAMPLE_JSON = `{
   },
   "description": "Прибор предназначен для измерения избыточного давления."
 }`;
+
+const FALLBACK_MODELS = {
+  openai: {
+    cheap: "gpt-5.4-mini-2026-03-17",
+    medium: "gpt-5.4-2026-03-17",
+    expensive: "gpt-5.4-pro-2026-03-17",
+  },
+  gemini: {
+    cheap: "gemini-2.5-flash-lite",
+    medium: "gemini-3.8-flash",
+    expensive: "gemini-2.5-pro",
+  },
+  routerai: {
+    cheap: "inclusionai/ling-3.0-flash",
+    medium: "qwen/qwen3.7-flash",
+    expensive: "minimax/minimax-m3.1-flash",
+  },
+};
 
 function CardTitle({ children }) {
   return (
@@ -38,6 +57,12 @@ export default function App() {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
   const [card, setCard] = useState(null);
+  const [tier, setTier] = useState("cheap");
+  const [allModels, setAllModels] = useState(null);
+
+  useEffect(() => {
+    fetchModels().then(setAllModels);
+  }, []);
 
   const product = useMemo(() => {
     if (mode === "raw") {
@@ -72,6 +97,7 @@ export default function App() {
         provider,
         apiKey: apiKey.trim(),
         product: product.parsed,
+        modelTier: tier,
       });
       if (body.ok) {
         setCard(body.data);
@@ -118,6 +144,11 @@ export default function App() {
           <div className="rounded-2xl border border-border bg-surface p-5 shadow-[0_10px_40px_-12px_rgba(114,47,55,0.15)]">
             <div className="space-y-4">
               <ProviderSelect value={provider} onChange={setProvider} />
+              <TierSelect
+                tier={tier}
+                onChange={setTier}
+                models={allModels?.[provider] ?? FALLBACK_MODELS[provider]}
+              />
               <KeyInput
                 provider={provider}
                 value={apiKey}
