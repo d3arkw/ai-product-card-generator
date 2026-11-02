@@ -249,3 +249,6 @@ logs/
 # Frontend
 frontend/node_modules/
 frontend/dist/
+
+# Пример несекретных настроек (без ключей) — можно в Git
+!backend/.env.example
