@@ -24,7 +24,7 @@ Backend: Python 3.14, FastAPI 0.141.1, Pydantic 2.13.5, openai 3.42.1, google-ge
 
 ```
 backend/app/
-  main.py            # FastAPI: POST /api/v1/generate, GET /health, CORS, единый формат ошибок
+  main.py            # FastAPI: POST /api/v1/generate, GET /health, CORS, единый JSON-конверт ошибок
   config.py          # настройки: модели, таймауты, лимиты ретраев
   deps.py            # реестр провайдеров (Strategy)
   exceptions.py      # AppError -> {ok:false, error:{code,message}} без технических деталей
@@ -65,11 +65,12 @@ docker compose up --build
 - Frontend: http://localhost:5173
 - Backend: http://localhost:8000 (`/health`, `POST /api/v1/generate`)
 
-Адрес backend зашит во frontend на этапе сборки (`VITE_API_URL`,
-по умолчанию `http://localhost:8000`). Для другого хоста:
+По умолчанию frontend собран с относительным API-адресом и обращается к backend
+через встроенный прокси nginx (`/api/` → `backend:8000`), поэтому работает
+на любом хосте без пересборки. Чтобы указать внешний backend напрямую:
 
 ```bash
-docker compose build --build-arg VITE_API_URL=http://<host>:8000
+VITE_API_URL=http://<host>:8000 docker compose up --build
 ```
 
 Остановка: `docker compose down`. Ключи ни в образы, ни в compose-файл
@@ -77,7 +78,7 @@ docker compose build --build-arg VITE_API_URL=http://<host>:8000
 
 ## Установка (без Docker)
 
-Требуется Python 3.14+ и Node.js 18+.
+Требуется Python 3.14+ и Node.js 22+.
 
 Backend:
 
@@ -107,6 +108,8 @@ Backend (http://127.0.0.1:8000):
 cd backend
 ../.venv/bin/uvicorn app.main:app --port 8000
 ```
+
+Слушает `127.0.0.1`; для доступа по сети добавьте `--host 0.0.0.0`.
 
 Frontend (http://127.0.0.1:5173):
 
@@ -145,6 +148,15 @@ curl -X POST http://127.0.0.1:8000/api/v1/generate \
 Если данных мало, модель вернёт частичный результат и перечислит
 недостающее в `missing_data`, а неподтверждённые значения заменит
 на «данных нет».
+
+## Дизайн
+
+Интерфейс построен на фирменной палитре из `color-design-system.md`:
+лаймовый `#EFFBBB` + бордо `#722F37` («Premium / Modern Technology»).
+Все 19 токенов (`brand-*`, `surface-*`, `text-*`, `interactive-*`, статусные)
+заданы в Tailwind v4 через `@theme` в `frontend/src/styles/index.css`
+и используются как утилиты (`bg-brand-primary`, `text-text-secondary`).
+Адаптив: мобильная колонка 390px и двухколоночный десктоп 1280px.
 
 ## Тесты
 
