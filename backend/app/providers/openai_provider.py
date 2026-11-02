@@ -79,7 +79,8 @@ class OpenAICompatibleProvider(BaseLLMProvider):
             raise self._map_status_error(exc) from exc
         finally:
             await client.close()
-        content = response.choices[0].message.content
+        message = response.choices[0].message if response.choices else None
+        content = message.content if message is not None else None
         if not content:
             raise ServiceUnavailableError(f"{self.label} вернул пустой ответ")
         return content
@@ -89,9 +90,11 @@ class OpenAICompatibleProvider(BaseLLMProvider):
             return InvalidApiKeyError(f"Неверный API-ключ {self.label}")
         if exc.status_code == 429:
             return RateLimitError(f"Превышен лимит запросов {self.label}")
+        if exc.status_code == 408:
+            return UpstreamTimeoutError(f"{self.label} не ответил вовремя")
         if exc.status_code >= 500:
             return ServiceUnavailableError(f"{self.label} временно недоступен")
-        return BadRequestError(f"{self.label} отклонил запрос: {exc.message}")
+        return BadRequestError(f"{self.label} отклонил запрос ({exc.status_code}): {exc.message}")
 
 
 class OpenAIProvider(OpenAICompatibleProvider):

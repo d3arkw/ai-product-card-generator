@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     routerai_base_url: str = "https://routerai.ru/api/v1"
     request_timeout_seconds: int = 60
     max_repair_retries: int = 2
+    cors_origins: str = "*"
 
 
 @lru_cache

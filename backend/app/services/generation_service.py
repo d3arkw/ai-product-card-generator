@@ -1,17 +1,15 @@
 import json
 import re
-from functools import lru_cache
 from pathlib import Path
 
 from pydantic import ValidationError
 
 from app.config import get_settings
 from app.deps import get_provider
-from app.exceptions import InvalidModelResponseError
+from app.exceptions import InvalidModelResponseError, ServiceUnavailableError
 from app.schemas.generation import GenerateRequest, ProductCard
 
 
-@lru_cache
 def system_prompt() -> str:
     rules = (Path(__file__).parent.parent / "prompts" / "product_card.txt").read_text(
         encoding="utf-8"
@@ -40,13 +38,17 @@ def tokens(text: str) -> list[str]:
 
 def provenance_problems(card: ProductCard, product_json: str) -> list[str]:
     source = normalize(product_json)
+    source_compact = re.sub(r"\s+", "", source)
     source_tokens = set(tokens(source))
     problems = []
     for item in card.characteristics:
-        if item.value.strip().lower() == "данных нет":
-            continue
         value = normalize(item.value)
-        if value and value in source:
+        if not value or value in _MISSING_VALUES:
+            continue
+        if value in source:
+            continue
+        squashed = re.sub(r"\s+", "", value)
+        if len(squashed) > 3 and squashed in source_compact:
             continue
         item_tokens = tokens(value)
         if not item_tokens:
@@ -55,6 +57,17 @@ def provenance_problems(card: ProductCard, product_json: str) -> list[str]:
         if known / len(item_tokens) < 0.6:
             problems.append(item.name)
     return problems
+
+
+_MISSING_VALUES = frozenset(
+    {
+        "данных нет",
+        "нет данных",
+        "данные отсутствуют",
+        "информация отсутствует",
+        "не указано",
+    }
+)
 
 
 def repair_note(product_json: str, exc: ValidationError) -> str:
@@ -84,15 +97,22 @@ async def generate_card(payload: GenerateRequest) -> ProductCard:
     schema = ProductCard.model_json_schema()
     product_json = payload.product.model_dump_json(indent=2, ensure_ascii=False)
     content = build_user_content(payload)
+    unavailable_retried = False
     attempts = get_settings().max_repair_retries + 1
     for attempt in range(attempts):
         last = attempt + 1 >= attempts
-        raw = await provider.generate_text(
-            system_prompt=system_prompt(),
-            user_content=content,
-            api_key=api_key,
-            response_schema=schema,
-        )
+        try:
+            raw = await provider.generate_text(
+                system_prompt=system_prompt(),
+                user_content=content,
+                api_key=api_key,
+                response_schema=schema,
+            )
+        except ServiceUnavailableError:
+            if last or unavailable_retried:
+                raise
+            unavailable_retried = True
+            continue
         try:
             card = ProductCard.model_validate_json(raw)
         except ValidationError as exc:
@@ -109,4 +129,3 @@ async def generate_card(payload: GenerateRequest) -> ProductCard:
             content = provenance_note(product_json, problems)
             continue
         return card
-    raise InvalidModelResponseError()

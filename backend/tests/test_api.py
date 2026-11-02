@@ -52,6 +52,14 @@ def test_missing_api_key_rejected():
     assert response.json()["error"]["code"] == "validation_error"
 
 
+def test_whitespace_api_key_rejected():
+    payload = make_payload()
+    payload["api_key"] = "   "
+    response = client.post("/api/v1/generate", json=payload)
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+
+
 def test_unknown_provider_rejected():
     payload = make_payload()
     payload["provider"] = "anthropic"

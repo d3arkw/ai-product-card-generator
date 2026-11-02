@@ -1,4 +1,5 @@
 import asyncio
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -238,3 +239,79 @@ def test_routerai_auth_error():
                 response_schema={"type": "object"},
             )
         )
+
+
+def test_openai_not_found_is_bad_request():
+    response = MagicMock(status_code=404)
+    client = openai_client(error=APIStatusError("gone", response=response, body=None))
+    with pytest.raises(BadRequestError):
+        call_openai(client)
+
+
+def test_openai_request_timeout_maps_to_upstream():
+    response = MagicMock(status_code=408)
+    client = openai_client(error=APIStatusError("slow", response=response, body=None))
+    with pytest.raises(UpstreamTimeoutError):
+        call_openai(client)
+
+
+def test_openai_empty_choices():
+    client = AsyncMock()
+    client.close = AsyncMock()
+    client.chat.completions.create = AsyncMock(return_value=MagicMock(choices=[]))
+    with pytest.raises(ServiceUnavailableError):
+        call_openai(client)
+
+
+def test_gemini_string_code_is_key_error():
+    client, _ = gemini_client(error=GeminiAPIError("401", {"error": {"message": "bad"}}))
+    with pytest.raises(InvalidApiKeyError):
+        call_gemini(client)
+
+
+def test_gemini_unknown_client_error_is_bad_request():
+    client, _ = gemini_client(error=GeminiAPIError(409, {"error": {"message": "conflict"}}))
+    with pytest.raises(BadRequestError):
+        call_gemini(client)
+
+
+def test_gemini_sends_sanitized_json_schema():
+    schema = {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string", "minLength": 1, "maxLength": 70},
+            "item": {"$ref": "#/$defs/Item"},
+        },
+        "required": ["title"],
+        "additionalProperties": False,
+        "$defs": {
+            "Item": {
+                "type": "object",
+                "properties": {"name": {"type": "string"}},
+                "additionalProperties": False,
+            }
+        },
+    }
+    client, models = gemini_client(text="{}")
+    with patch("app.providers.gemini_provider.genai.Client", return_value=client):
+        run(
+            GeminiProvider().generate_text(
+                system_prompt="sys",
+                user_content="user",
+                api_key="sk-x",
+                response_schema=schema,
+            )
+        )
+    sent = models.generate_content.await_args.kwargs["config"]["response_json_schema"]
+    dumped = json.dumps(sent)
+    assert "$ref" not in dumped
+    assert "$defs" not in dumped
+    assert "additionalProperties" not in dumped
+    assert "minLength" not in dumped
+    assert sent["properties"]["item"]["properties"]["name"] == {"type": "string"}
+
+
+def test_gemini_client_is_closed():
+    client, _ = gemini_client(text="{}")
+    call_gemini(client)
+    client.close.assert_called_once()

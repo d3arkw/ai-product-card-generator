@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 
 from app.schemas.product import ProductInput
 
@@ -11,6 +11,14 @@ class GenerateRequest(BaseModel):
     provider: Literal["openai", "gemini", "routerai"]
     api_key: SecretStr = Field(min_length=1, max_length=500)
     product: ProductInput
+
+    @field_validator("api_key")
+    @classmethod
+    def _strip_key(cls, value: SecretStr) -> SecretStr:
+        text = value.get_secret_value().strip()
+        if not text:
+            raise ValueError("API-ключ не должен быть пустым")
+        return SecretStr(text)
 
 
 class Characteristic(BaseModel):

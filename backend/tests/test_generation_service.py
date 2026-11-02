@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.exceptions import InvalidModelResponseError
+from app.exceptions import InvalidModelResponseError, ServiceUnavailableError
 from app.schemas.generation import GenerateRequest
 from app.schemas.product import ProductInput
 from app.services import generation_service
@@ -97,6 +97,46 @@ def test_missing_data_preserved():
     with patch.object(generation_service, "get_provider", return_value=provider):
         card = run(generate_card(make_payload()))
     assert card.missing_data == ["присоединение", "класс точности"]
+
+
+def test_spaced_value_matches_compact_source():
+    provider = mock_provider(
+        make_card_json(characteristics=[{"name": "Диапазон", "value": "0 – 120 °C"}])
+    )
+    with patch.object(generation_service, "get_provider", return_value=provider):
+        card = run(generate_card(make_payload()))
+    assert card.characteristics[0].value == "0 – 120 °C"
+    provider.generate_text.assert_awaited_once()
+
+
+def test_missing_value_variants_are_skipped():
+    provider = mock_provider(
+        make_card_json(
+            characteristics=[{"name": "Масса", "value": "Нет данных"}],
+            missing_data=["масса"],
+        )
+    )
+    with patch.object(generation_service, "get_provider", return_value=provider):
+        card = run(generate_card(make_payload()))
+    assert card.missing_data == ["масса"]
+    provider.generate_text.assert_awaited_once()
+
+
+def test_unavailable_is_retried_once_then_succeeds():
+    provider = mock_provider(ServiceUnavailableError("down"), make_card_json())
+    with patch.object(generation_service, "get_provider", return_value=provider):
+        card = run(generate_card(make_payload()))
+    assert card.seo_title == "Термометр ТБ-63"
+    assert provider.generate_text.await_count == 2
+
+
+def test_unavailable_twice_raises():
+    provider = mock_provider(ServiceUnavailableError("down"), ServiceUnavailableError("down"))
+    with (
+        patch.object(generation_service, "get_provider", return_value=provider),
+        pytest.raises(ServiceUnavailableError),
+    ):
+        run(generate_card(make_payload()))
 
 
 def test_prompt_has_core_rules():

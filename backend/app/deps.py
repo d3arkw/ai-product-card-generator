@@ -12,7 +12,7 @@ _providers: dict[str, BaseLLMProvider] = {
 
 
 def get_provider(name: str) -> BaseLLMProvider:
-    try:
-        return _providers[name]
-    except KeyError as exc:
-        raise BadRequestError(f"Неизвестный провайдер: {name}") from exc
+    provider = _providers.get(name)
+    if provider is None:
+        raise BadRequestError(f"Неизвестный провайдер: {name}")
+    return provider
