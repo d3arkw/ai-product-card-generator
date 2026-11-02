@@ -1,0 +1,146 @@
+# AI-ассистент товарных карточек
+
+Веб-приложение для B2B-каталога КИП: принимает данные о товаре (форма или JSON),
+передаёт их выбранной LLM и возвращает структурированный черновик карточки —
+SEO-заголовок, SEO-описание, характеристики, поисковые запросы, commercial-блок
+и список недостающих данных. Результат копируется как JSON, Markdown или текст.
+
+## Возможности
+
+- Три LLM-провайдера на выбор: OpenAI, Google Gemini, RouterAI.
+- BYOK: пользователь вводит свой API-ключ, ключ живёт только в рамках запроса.
+- Строгий structured output (Pydantic + нативный JSON-режим провайдеров).
+- Проверка provenance: значения характеристик должны подтверждаться входными данными.
+- Защита от prompt-инъекций: маркеры данных + семантическая перепроверка.
+- Лимиты: SEO-заголовок ≤ 70 символов, SEO-описание 800–1200 символов, запросы 3–5 шт.
+- Состояния интерфейса: пустое, загрузка, результат, ошибка; адаптив 390px / 1280px.
+
+## Стек
+
+Backend: Python 3.14, FastAPI 0.141.1, Pydantic 2.13.5, openai 3.42.1, google-genai 2.34.0.
+Тесты: pytest 9.2.0, ruff 0.17.3. Frontend: React 19.3.1, Vite 7.3.7, Tailwind CSS 4.3.3.
+
+## Архитектура
+
+```
+backend/app/
+  main.py            # FastAPI: POST /api/v1/generate, GET /health, CORS, единый формат ошибок
+  config.py          # настройки: модели, таймауты, лимиты ретраев
+  deps.py            # реестр провайдеров (Strategy)
+  exceptions.py      # AppError -> {ok:false, error:{code,message}} без технических деталей
+  schemas/           # GenerateRequest (вход), ProductCard (строгая схема результата)
+  services/          # generate_card: вызов -> валидация -> repair/provenance-ретраи
+  providers/         # BaseLLMProvider; openai, gemini, routerai (OpenAI-совместимый)
+  prompts/           # product_card.txt: системный промпт отдельно от кода
+frontend/src/
+  App.jsx            # поток: провайдер -> ключ -> товар (форма/JSON) -> генерация -> результат
+  api/client.js      # POST /api/v1/generate, AbortController 180 c
+  components/        # ProviderSelect, KeyInput, ProductForm, RawJsonInput, ResultCard, ErrorBanner
+```
+
+Поток: UI собирает `{provider, api_key, product}` → backend выбирает провайдера
+по имени, вызывает LLM со схемой `ProductCard`, валидирует ответ, при невалиде
+или неподтверждённых значениях повторяет с уточняющей подсказкой
+(`max_repair_retries + 1` попыток), возвращает `{ok:true, data}` либо
+`{ok:false, error}`.
+
+Ключевые решения:
+
+- Общая абстракция `BaseLLMProvider`: бизнес-логика не знает SDK провайдеров,
+  RouterAI переиспользует OpenAI-совместимый класс (тот же контракт, свой
+  `base_url`, модель `inclusionai/ling-3.0-flash`, таймаут 180 с вместо 60 с —
+  шлюз отвечает медленно в режиме строгой схемы).
+- Ключ передаётся `SecretStr`, существует только в контексте запроса: нет БД,
+  нет localStorage, нет логов, параллельные запросы изолированы (покрыто тестами).
+- Промпт лежит в `prompts/product_card.txt` и правится без изменения кода.
+
+## Установка
+
+Требуется Python 3.14+ и Node.js 18+.
+
+Backend:
+
+```bash
+cd backend
+python -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+```
+
+Файл `.env` не нужен: backend работает без него, секреты только пользовательские
+и только в запросах. Опционально переопределяются переменные окружения:
+`OPENAI_MODEL`, `GEMINI_MODEL`, `ROUTERAI_MODEL`, `ROUTERAI_BASE_URL`,
+`REQUEST_TIMEOUT_SECONDS`, `MAX_REPAIR_RETRIES`.
+
+## Запуск
+
+Backend (http://127.0.0.1:8000):
+
+```bash
+cd backend
+../.venv/bin/uvicorn app.main:app --port 8000
+```
+
+Frontend (http://127.0.0.1:5173):
+
+```bash
+cd frontend
+npm run dev -- --port 5173 --host 127.0.0.1
+```
+
+Проверка: `curl http://127.0.0.1:8000/health` → `{"status":"up"}`.
+
+## API-ключи
+
+Ключ вводится в интерфейсе и нигде не сохраняется. Где получить:
+
+- OpenAI: https://platform.openai.com/api-keys
+- Google Gemini: https://aistudio.google.com/apikey
+- RouterAI: личный кабинет на https://routerai.ru
+
+## Использование
+
+1. Выберите провайдера и вставьте API-ключ.
+2. Заполните форму (название обязательно) или вставьте JSON товара.
+3. Нажмите «Сгенерировать карточку» и дождитесь результата.
+4. Скопируйте whole-card как JSON / Markdown / текст либо отдельные поля.
+
+Пример запроса:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"provider":"routerai","api_key":"ВАШ_КЛЮЧ","product":{"name":"Манометр показывающий DM 02","specs":{"диапазон измерений":"0–1,6 МПа"}}}'
+```
+
+Ответ при успехе: `{"ok":true,"data":{...}}`; при ошибке:
+`{"ok":false,"error":{"code":"invalid_api_key","message":"..."}}`.
+Если данных мало, модель вернёт частичный результат и перечислит
+недостающее в `missing_data`, а неподтверждённые значения заменит
+на «данных нет».
+
+## Тесты
+
+```bash
+cd backend
+../.venv/bin/ruff check app tests
+../.venv/bin/python -m pytest tests
+```
+
+46 тестов, все с моками внешних API — платные вызовы в наборе не выполняются.
+Покрыты: входная валидация, схема результата, лимиты полей, ретраи при
+невалидном JSON, выдуманные значения, `missing_data`, ошибки OpenAI/Gemini/
+RouterAI, отсутствие ключа в ответах, изоляция ключей. Сборка frontend:
+`cd frontend && npm run build`.
+
+## Известные ограничения
+
+- Генерация через RouterAI занимает около минуты (строгая JSON-схема на шлюзе),
+  таймауты: backend 180 с, frontend 3 мин, показан скелетон загрузки.
+- Качество карточки зависит от полноты входных данных и выбранной модели.
