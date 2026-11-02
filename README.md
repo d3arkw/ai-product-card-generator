@@ -63,7 +63,14 @@ frontend/src/
 
 ## Быстрый старт через Docker
 
-Самый короткий путь — Docker Compose соберёт и поднимет оба сервиса:
+Сначала скопируйте репозиторий:
+
+```bash
+git clone https://github.com/d3arkw/ai-product-card-generator.git
+cd ai-product-card-generator
+```
+
+Дальше Docker Compose соберёт и поднимет оба сервиса:
 
 ```bash
 docker compose up --build
@@ -85,7 +92,14 @@ VITE_API_URL=http://<host>:8000 docker compose up --build
 
 ## Установка и запуск без Docker
 
-Понадобятся Python 3.14+ и Node.js 22+. Три шага:
+Понадобятся Python 3.14+, Node.js 22+ и git. Четыре шага:
+
+**0. Скопируйте репозиторий:**
+
+```bash
+git clone https://github.com/d3arkw/ai-product-card-generator.git
+cd ai-product-card-generator
+```
 
 **1. Backend** — создать окружение и поставить зависимости:
 
